@@ -1,0 +1,50 @@
+package riscv
+
+import java.nio.file.Files
+import java.nio.file.Paths
+
+import chiseltest.VerilatorBackendAnnotation
+import chiseltest.WriteVcdAnnotation
+import firrtl.AnnotationSeq
+
+object VerilatorEnabler {
+  val annos: AnnotationSeq = if (sys.env.contains("Path")) {
+    if (
+      sys.env
+        .getOrElse("Path", "")
+        .split(";")
+        .exists(path => {
+          Files.exists(Paths.get(path, "verilator"))
+        })
+    ) {
+      Seq(VerilatorBackendAnnotation)
+    } else {
+      Seq()
+    }
+  } else {
+    if (
+      sys.env
+        .getOrElse("PATH", "")
+        .split(":")
+        .exists(path => {
+          Files.exists(Paths.get(path, "verilator"))
+        })
+    ) {
+      Seq(VerilatorBackendAnnotation)
+    } else {
+      Seq()
+    }
+  }
+}
+
+object WriteVcdEnabler {
+  val annos: AnnotationSeq = if (sys.env.contains("WRITE_VCD")) {
+    Seq(WriteVcdAnnotation)
+  } else {
+    Seq()
+  }
+}
+
+object TestAnnotations {
+  val annos = VerilatorEnabler.annos ++ WriteVcdEnabler.annos
+}
