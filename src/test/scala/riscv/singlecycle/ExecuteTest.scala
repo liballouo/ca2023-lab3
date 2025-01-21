@@ -13,7 +13,7 @@ import riscv.core.InstructionTypes
 import riscv.TestAnnotations
 
 class ExecuteTest extends AnyFlatSpec with ChiselScalatestTester {
-  behavior.of("Execution of Single Cycle CPU")
+  behavior.of("Execution of Single Cycle CPU with CSR instructions")
   it should "execute correctly" in {
     test(new Execute).withAnnotations(TestAnnotations.annos) { c =>
       c.io.instruction.poke(0x001101b3L.U) // x3 =  x2 + x1

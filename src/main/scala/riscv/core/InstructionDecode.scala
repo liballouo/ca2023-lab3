@@ -137,6 +137,9 @@ class InstructionDecode extends Module {
     val wb_reg_write_source    = Output(UInt(2.W))
     val reg_write_enable       = Output(Bool())
     val reg_write_address      = Output(UInt(Parameters.PhysicalRegisterAddrWidth))
+
+    val ex_csr_write_enable    = Output(Bool())
+    val ex_csr_address         = Output(UInt(Parameters.CSRRegisterAddrWidth))
   })
   val opcode = io.instruction(6, 0)
   val funct3 = io.instruction(14, 12)
@@ -194,12 +197,8 @@ class InstructionDecode extends Module {
     ALUOp2Source.Immediate
   )
 
-  // lab3(InstructionDecode) begin
-
   io.memory_read_enable  := (opcode === InstructionTypes.L)
   io.memory_write_enable := (opcode === InstructionTypes.S)
-
-  // lab3(InstructionDecode) end
 
   io.wb_reg_write_source := MuxCase(
     RegWriteSource.ALUResult,
@@ -207,12 +206,20 @@ class InstructionDecode extends Module {
       (opcode === InstructionTypes.RM || opcode === InstructionTypes.I ||
         opcode === Instructions.lui || opcode === Instructions.auipc) -> RegWriteSource.ALUResult, // same as default
       (opcode === InstructionTypes.L)                                 -> RegWriteSource.Memory,
-      (opcode === Instructions.jal || opcode === Instructions.jalr)   -> RegWriteSource.NextInstructionAddress
+      (opcode === Instructions.jal || opcode === Instructions.jalr)   -> RegWriteSource.NextInstructionAddress,
+      (opcode === Instructions.csr)                                   -> RegWriteSource.CSR
     )
   )
 
   io.reg_write_enable := (opcode === InstructionTypes.RM) || (opcode === InstructionTypes.I) ||
     (opcode === InstructionTypes.L) || (opcode === Instructions.auipc) || (opcode === Instructions.lui) ||
-    (opcode === Instructions.jal) || (opcode === Instructions.jalr)
+    (opcode === Instructions.jal) || (opcode === Instructions.jalr) || (opcode === Instructions.csr)
   io.reg_write_address := rd
+
+  io.ex_csr_address := io.instruction(31, 20)
+  io.ex_csr_write_enable := (opcode === Instructions.csr) && (
+    funct3 === InstructionsTypeCSR.csrrw || funct3 === InstructionsTypeCSR.csrrwi ||
+    funct3 === InstructionsTypeCSR.csrrs || funct3 === InstructionsTypeCSR.csrrsi ||
+    funct3 === InstructionsTypeCSR.csrrc || funct3 === InstructionsTypeCSR.csrrci
+  )
 }

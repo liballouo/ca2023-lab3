@@ -18,9 +18,13 @@ class Execute extends Module {
     val aluop1_source       = Input(UInt(1.W))
     val aluop2_source       = Input(UInt(1.W))
 
+    val csr_reg_read_data   = Input(UInt(Parameters.DataWidth))
+
     val mem_alu_result  = Output(UInt(Parameters.DataWidth))
     val if_jump_flag    = Output(Bool())
     val if_jump_address = Output(UInt(Parameters.DataWidth))
+
+    val csr_reg_write_data  = Output(UInt(Parameters.DataWidth))
   })
 
   val opcode = io.instruction(6, 0)
@@ -36,13 +40,9 @@ class Execute extends Module {
   alu_ctrl.io.funct3 := funct3
   alu_ctrl.io.funct7 := funct7
 
-  // lab3(Execute) begin
-
   alu.io.func   := alu_ctrl.io.alu_funct
   alu.io.op1    := Mux(io.aluop1_source === 1.U, io.instruction_address, io.reg1_data)
   alu.io.op2    := Mux(io.aluop2_source === 1.U, io.immediate, io.reg2_data)
-
-  // lab3(Execute) end
 
   io.mem_alu_result := alu.io.result
   io.if_jump_flag := opcode === Instructions.jal ||
@@ -60,4 +60,17 @@ class Execute extends Module {
       )
     )
   io.if_jump_address := io.immediate + Mux(opcode === Instructions.jalr, io.reg1_data, io.instruction_address)
+
+  io.csr_reg_write_data := MuxLookup(
+    funct3,
+    0.U,
+    IndexedSeq(
+      InstructionsTypeCSR.csrrw  -> io.reg1_data,
+      InstructionsTypeCSR.csrrs  -> (io.csr_reg_read_data | io.reg1_data),
+      InstructionsTypeCSR.csrrc  -> (io.csr_reg_read_data & (~io.reg1_data)),
+      InstructionsTypeCSR.csrrwi -> io.immediate,
+      InstructionsTypeCSR.csrrsi -> (io.csr_reg_read_data | io.immediate),
+      InstructionsTypeCSR.csrrci -> (io.csr_reg_read_data & (~io.immediate))
+    )
+  )
 }

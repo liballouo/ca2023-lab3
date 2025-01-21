@@ -8,12 +8,13 @@ import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 import riscv.core.ALUOp1Source
 import riscv.core.ALUOp2Source
+import riscv.core.RegWriteSource
 import riscv.core.InstructionDecode
 import riscv.core.InstructionTypes
 import riscv.TestAnnotations
 
 class InstructionDecoderTest extends AnyFlatSpec with ChiselScalatestTester {
-  behavior.of("InstructionDecoder of Single Cycle CPU")
+  behavior.of("InstructionDecoder of Single Cycle CPU with CSR instructions")
   it should "produce correct control signal" in {
     test(new InstructionDecode).withAnnotations(TestAnnotations.annos) { c =>
       c.io.instruction.poke(0x00a02223L.U) // S-type
@@ -32,6 +33,13 @@ class InstructionDecoderTest extends AnyFlatSpec with ChiselScalatestTester {
       c.io.instruction.poke(0x002081b3L.U) // add
       c.io.ex_aluop1_source.expect(ALUOp1Source.Register)
       c.io.ex_aluop2_source.expect(ALUOp2Source.Register)
+      c.clock.step()
+
+      c.io.instruction.poke(0x30501073L.U) // CSRRW (CSR Read and Write)
+      c.io.wb_reg_write_source.expect(RegWriteSource.CSR)   
+      c.io.regs_reg1_read_address.expect(0.U)              // Read from x0
+      c.io.ex_csr_address.expect(0x305.U)                  // CSR address mtvec
+      c.io.ex_csr_write_enable.expect(true.B)              // CSR write should be enabled
       c.clock.step()
     }
   }

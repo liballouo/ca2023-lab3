@@ -18,7 +18,7 @@ import riscv.Parameters
 import riscv.TestAnnotations
 
 class InstructionFetchTest extends AnyFlatSpec with ChiselScalatestTester {
-  behavior.of("InstructionFetch of Single Cycle CPU")
+  behavior.of("InstructionFetch of Single Cycle CPU with CSR instructions")
   it should "fetch instruction" in {
     test(new InstructionFetch).withAnnotations(TestAnnotations.annos) { c =>
       val entry = 0x1000
