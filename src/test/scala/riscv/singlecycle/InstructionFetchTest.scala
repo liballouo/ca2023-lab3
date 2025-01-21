@@ -43,8 +43,9 @@ class InstructionFetchTest extends AnyFlatSpec with ChiselScalatestTester {
             pre = entry
           case 2 => // interrupt
             c.io.interrupt_assert.poke(true.B)
+            c.io.interrupt_handler_address.poke(interruptHandlerAddress)
             c.clock.step()
-            c.io.instruction_address.expect(interruptHandlerAddress.U)
+            c.io.instruction_address.expect(interruptHandlerAddress)
             pre = interruptHandlerAddress
             c.io.interrupt_assert.poke(false.B) // clear interrupt after handling
         }
