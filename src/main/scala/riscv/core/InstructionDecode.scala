@@ -138,8 +138,8 @@ class InstructionDecode extends Module {
     val reg_write_enable       = Output(Bool())
     val reg_write_address      = Output(UInt(Parameters.PhysicalRegisterAddrWidth))
 
-    val ex_csr_write_enable    = Output(Bool())
-    val ex_csr_address         = Output(UInt(Parameters.CSRRegisterAddrWidth))
+    val csr_write_enable    = Output(Bool())
+    val csr_address         = Output(UInt(Parameters.CSRRegisterAddrWidth))
   })
   val opcode = io.instruction(6, 0)
   val funct3 = io.instruction(14, 12)
@@ -216,8 +216,8 @@ class InstructionDecode extends Module {
     (opcode === Instructions.jal) || (opcode === Instructions.jalr) || (opcode === Instructions.csr)
   io.reg_write_address := rd
 
-  io.ex_csr_address := io.instruction(31, 20)
-  io.ex_csr_write_enable := (opcode === Instructions.csr) && (
+  io.csr_address := io.instruction(31, 20)
+  io.csr_write_enable := (opcode === Instructions.csr) && (
     funct3 === InstructionsTypeCSR.csrrw || funct3 === InstructionsTypeCSR.csrrwi ||
     funct3 === InstructionsTypeCSR.csrrs || funct3 === InstructionsTypeCSR.csrrsi ||
     funct3 === InstructionsTypeCSR.csrrc || funct3 === InstructionsTypeCSR.csrrci

@@ -35,11 +35,11 @@ class InstructionDecoderTest extends AnyFlatSpec with ChiselScalatestTester {
       c.io.ex_aluop2_source.expect(ALUOp2Source.Register)
       c.clock.step()
 
-      c.io.instruction.poke(0x30501073L.U) // CSRRW (CSR Read and Write)
+      c.io.instruction.poke(0x30501073L.U) // csrrw x0, mtvec, x0
       c.io.wb_reg_write_source.expect(RegWriteSource.CSR)   
-      c.io.regs_reg1_read_address.expect(0.U)              // Read from x0
-      c.io.ex_csr_address.expect(0x305.U)                  // CSR address mtvec
-      c.io.ex_csr_write_enable.expect(true.B)              // CSR write should be enabled
+      c.io.regs_reg1_read_address.expect(0.U)              
+      c.io.csr_address.expect(0x305.U)                     // CSR address mtvec
+      c.io.csr_write_enable.expect(true.B)                 // CSR write enable should be enabled
       c.clock.step()
     }
   }

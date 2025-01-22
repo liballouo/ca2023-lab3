@@ -67,10 +67,10 @@ class Execute extends Module {
     IndexedSeq(
       InstructionsTypeCSR.csrrw  -> io.reg1_data,
       InstructionsTypeCSR.csrrs  -> (io.csr_reg_read_data | io.reg1_data),
-      InstructionsTypeCSR.csrrc  -> (io.csr_reg_read_data & (~io.reg1_data)),
+      InstructionsTypeCSR.csrrc  -> (io.csr_reg_read_data & ~(io.reg1_data)),
       InstructionsTypeCSR.csrrwi -> io.immediate,
       InstructionsTypeCSR.csrrsi -> (io.csr_reg_read_data | io.immediate),
-      InstructionsTypeCSR.csrrci -> (io.csr_reg_read_data & (~io.immediate))
+      InstructionsTypeCSR.csrrci -> (io.csr_reg_read_data & ~(io.immediate))
     )
   )
 }

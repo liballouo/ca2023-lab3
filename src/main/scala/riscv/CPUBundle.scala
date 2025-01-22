@@ -16,6 +16,8 @@ class CPUBundle extends Bundle {
   val deviceSelect        = Output(UInt(Parameters.SlaveDeviceCountBits.W))
   val debug_read_address  = Input(UInt(Parameters.PhysicalRegisterAddrWidth))
   val debug_read_data     = Output(UInt(Parameters.DataWidth))
+
+  val Interrupt_Flag      = Input(UInt(Parameters.InterruptFlagWidth))
   val csr_regs_debug_read_address = Input(UInt(Parameters.CSRRegisterAddrWidth))
   val csr_regs_debug_read_data = Output(UInt(Parameters.DataWidth))
 }

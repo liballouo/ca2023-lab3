@@ -17,15 +17,19 @@ class CPU extends Module {
   val ex         = Module(new Execute)
   val mem        = Module(new MemoryAccess)
   val wb         = Module(new WriteBack)
+  val csr        = Module(new CSR)
+  val clint      = Module(new CLINT)
 
   io.deviceSelect := mem.io.memory_bundle
     .address(Parameters.AddrBits - 1, Parameters.AddrBits - Parameters.SlaveDeviceCountBits)
 
-  inst_fetch.io.jump_address_id       := ex.io.if_jump_address
-  inst_fetch.io.jump_flag_id          := ex.io.if_jump_flag
-  inst_fetch.io.instruction_valid     := io.instruction_valid
-  inst_fetch.io.instruction_read_data := io.instruction
-  io.instruction_address              := inst_fetch.io.instruction_address
+  inst_fetch.io.jump_address_id           := Mux(clint.io.interrupt_assert === 1.U, clint.io.interrupt_handler_address, ex.io.if_jump_address)
+  inst_fetch.io.jump_flag_id              := (ex.io.if_jump_flag | clint.io.interrupt_assert)
+  inst_fetch.io.instruction_valid         := io.instruction_valid
+  inst_fetch.io.instruction_read_data     := io.instruction
+  inst_fetch.io.interrupt_assert          := clint.io.interrupt_assert
+  inst_fetch.io.interrupt_handler_address := clint.io.interrupt_handler_address
+  io.instruction_address                  := inst_fetch.io.instruction_address
 
   regs.io.write_enable  := id.io.reg_write_enable
   regs.io.write_address := id.io.reg_write_address
@@ -38,7 +42,16 @@ class CPU extends Module {
 
   id.io.instruction := inst_fetch.io.instruction
 
-  // lab3(cpu) begin
+  csr.io.reg_read_address_id  := id.io.csr_address
+  csr.io.reg_write_enable_id  := id.io.csr_write_enable
+  csr.io.reg_write_address_id := id.io.csr_address
+  csr.io.reg_write_data_ex    := ex.io.csr_reg_write_data
+
+  clint.io.Interrupt_Flag         := io.Interrupt_Flag
+  clint.io.Instruction            := inst_fetch.io.instruction
+  clint.io.IF_Instruction_Address := inst_fetch.io.instruction_address
+  clint.io.jump_flag              := ex.io.if_jump_flag
+  clint.io.jump_address           := ex.io.if_jump_address
 
   ex.io.instruction         := inst_fetch.io.instruction
   ex.io.instruction_address := inst_fetch.io.instruction_address
@@ -47,8 +60,7 @@ class CPU extends Module {
   ex.io.immediate           := id.io.ex_immediate
   ex.io.aluop1_source       := id.io.ex_aluop1_source
   ex.io.aluop2_source       := id.io.ex_aluop2_source
-
-  // lab3(cpu) end
+  ex.io.csr_reg_read_data   := csr.io.reg_read_data
 
   mem.io.alu_result          := ex.io.mem_alu_result
   mem.io.reg2_data           := regs.io.read_data2
@@ -69,4 +81,5 @@ class CPU extends Module {
   wb.io.alu_result          := ex.io.mem_alu_result
   wb.io.memory_read_data    := mem.io.wb_memory_read_data
   wb.io.regs_write_source   := id.io.wb_reg_write_source
+  wb.io.csr_read_data       := csr.io.reg_read_data
 }
